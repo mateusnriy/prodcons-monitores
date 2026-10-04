@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produtor-Consumidor com monitores</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Cabecalho principal -->
+    <header class="header">
+      <div class="header-left">
+        <h1>Simulador produtor-consumidor</h1>
+        <p class="subtitle">Monitores &amp; semântica de mesa</p>
+        <p class="authors"><strong>Equipe:</strong> Mateus Neri, Guilherme Lacerda, José Junior</p>
+      </div>
+      <div class="header-right">
+        <div class="status-pill" id="sse-status">
+          <span class="status-dot"></span>
+          <span id="sse-text">Conectando SSE...</span>
+        </div>
+
+        <!-- Interruptor de modo: Monitor x Modo Caos -->
+        <div class="mode-toggle" id="mode-toggle" role="group" aria-label="Modo de execução">
+          <button type="button" class="mode-btn mode-monitor ativo" id="btn-modo-monitor" aria-pressed="true">
+            <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/>
+              <path d="M8.5 12l2.5 2.5 4.5-5"/>
+            </svg>
+            Monitor
+          </button>
+          <button type="button" class="mode-btn mode-caos" id="btn-modo-caos" aria-pressed="false">
+            <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5.5 1-8.5z"/>
+            </svg>
+            Modo Caos
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Barra de Controles da Simulacao -->
+    <section class="controls-card">
+      <div class="control-actions">
+        <!-- botao unico: Iniciar -> Pausar -> Retomar -> Pausar ... (so o Resetar volta pra Iniciar) -->
+        <button type="button" id="btn-principal" class="btn btn-iniciar">
+          <span class="btn-icone" id="icone-principal"></span>
+          <span id="texto-principal">Iniciar</span>
+        </button>
+        <button type="button" id="btn-passo" class="btn btn-passo" title="Avança um único ciclo de thread (com a simulação pausada)">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M5 5v14"/>
+            <path d="M9 5.5v13l10-6.5z"/>
+          </svg>
+          Passo
+        </button>
+        <button type="button" id="btn-reset" class="btn btn-reset">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 3-6.7"/>
+            <path d="M3 4v5h5"/>
+          </svg>
+          Resetar
+        </button>
+
+        <span class="divisor" aria-hidden="true"></span>
+
+        <!-- atalhos -->
+        <button type="button" id="btn-forcar-cheio" class="btn-link" title="Produtores rápidos e consumidores lentos">Forçar Cheio</button>
+        <button type="button" id="btn-forcar-vazio" class="btn-link" title="Produtores lentos e consumidores rápidos">Forçar Vazio</button>
+      </div>
+
+      <div class="control-sliders">
+        <div class="slider-group slider-produtor">
+          <label for="slider-producer">Produtor:</label>
+          <input type="range" id="slider-producer" min="100" max="3000" step="100" value="1200">
+          <span class="slider-valor" id="val-producer">1.2s</span>
+        </div>
+        <div class="slider-group slider-consumidor">
+          <label for="slider-consumer">Consumidor:</label>
+          <input type="range" id="slider-consumer" min="100" max="3000" step="100" value="1400">
+          <span class="slider-valor" id="val-consumer">1.4s</span>
+        </div>
+        <div class="slider-group slider-critica">
+          <label for="slider-critical">Seção Crítica:</label>
+          <input type="range" id="slider-critical" min="0" max="1000" step="10" value="180">
+          <span class="slider-valor" id="val-critical">180ms</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Painel de Metricas e invariantes -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-label">Ocupação do Buffer</span>
+        <div class="metric-value" id="metric-occupancy">0 / 10</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="occupancy-progress" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Invariante de Segurança (0 &le; Count &le; N)</span>
+        <div class="metric-value status-ok" id="metric-invariant">PRESERVADA</div>
+        <span class="metric-sub" id="invariant-sub">Sem violações de limite</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Ponteiros do Buffer Circular</span>
+        <div class="metric-pointers">
+          <span class="pointer-badge in-badge">Entrada: <strong id="ptr-in">0</strong></span>
+          <span class="pointer-badge out-badge">Saída: <strong id="ptr-out">0</strong></span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Threads Produtoras/Consumidoras</span>
+        <div class="metric-value threads-count">3 P &bull; 3 C</div>
+        <span class="metric-sub">50 itens por produtor</span>
+      </div>
+    </section>
+
+    <!-- Area Central: Visualizacao do Buffer e Wait Sets -->
+    <div class="simulation-layout">
+      <!-- Buffer Circular (anel desenhado em SVG pelo app.js) -->
+      <section class="buffer-section">
+        <div class="buffer-header">
+          <h2>Buffer circular limitado (c = <span id="titulo-capacidade">10</span>)</h2>
+          <div class="buffer-legenda">
+            <span><i class="seta seta-in"></i> IN</span>
+            <span><i class="seta seta-out"></i> OUT</span>
+          </div>
+        </div>
+        <div class="circular-buffer-wrapper">
+          <svg id="buffer-svg" class="buffer-svg" viewBox="0 0 400 400" role="img" aria-label="Buffer circular"></svg>
+        </div>
+      </section>
+
+      <!-- Baias de Bloqueio (Wait Sets) -->
+      <aside class="waitsets-section">
+        <h2>Filas de espera (Wait Sets)</h2>
+        <div class="waitset-card">
+          <div class="waitset-header">
+            <h3>Produtores no wait() (Buffer Cheio)</h3>
+            <span class="badge" id="count-wait-prod">0</span>
+          </div>
+          <div class="waitset-list" id="list-wait-prod">
+            <span class="empty-hint">Nenhum produtor bloqueado</span>
+          </div>
+        </div>
+
+        <div class="waitset-card">
+          <div class="waitset-header">
+            <h3>Consumidores no wait() (Buffer Vazio)</h3>
+            <span class="badge" id="count-wait-cons">0</span>
+          </div>
+          <div class="waitset-list" id="list-wait-cons">
+            <span class="empty-hint">Nenhum consumidor bloqueado</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Terminal de Logs de Telemetria -->
+    <section class="terminal-section">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <span class="term-btn term-red"></span>
+          <span class="term-btn term-yellow"></span>
+          <span class="term-btn term-green"></span>
+          <span>Telemetria em tempo real</span>
+        </div>
+        <button type="button" id="btn-clear-logs" class="btn-sm">Limpar logs</button>
+      </div>
+      <div class="terminal-body" id="terminal-logs">
+        <div class="term-line term-system">[SISTEMA] Aguardando conexão com o servidor de telemetria...</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
