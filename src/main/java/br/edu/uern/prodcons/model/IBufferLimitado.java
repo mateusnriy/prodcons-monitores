@@ -24,6 +24,9 @@ public interface IBufferLimitado {
     // copia do array de itens pra nao vazar referencia interna
     Item[] getSnapshot();
 
+    // restaura o estado do buffer na migracao a quente entre modos
+    void restaurarEstado(Item[] snapshot, int in, int out, int count);
+
     // diz se o buffer atual e o modo caos ou o monitor oficial
     boolean isChaos();
 }

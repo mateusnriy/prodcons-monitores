@@ -19,9 +19,9 @@ public class RegistradorConsole {
             case "PRODUCAO_SUCESSO" -> ANSI_VERDE;
             case "CONSUMO_SUCESSO" -> ANSI_AZUL;
             case "BLOQUEIO_CHEIO", "BLOQUEIO_VAZIO" -> ANSI_AMARELO;
-            case "NOTIFICACAO" -> ANSI_CIANO;
+            case "NOTIFICACAO", "SISTEMA_PASSO" -> ANSI_CIANO;
             case "ANOMALIA_OVERFLOW", "ANOMALIA_UNDERFLOW", "ANOMALIA_LOST_UPDATE", "COLISAO" -> ANSI_VERMELHO;
-            case "SISTEMA_INICIO", "SISTEMA_FIM" -> ANSI_MAGENTA;
+            case "SISTEMA_INICIO", "SISTEMA_FIM", "SISTEMA_PAUSA" -> ANSI_MAGENTA;
             default -> ANSI_BRANCO;
         };
 

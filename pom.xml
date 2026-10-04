@@ -41,7 +41,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>br.edu.uern.prodcons.Main</mainClass>
+                            <mainClass>br.edu.uern.prodcons.Principal</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

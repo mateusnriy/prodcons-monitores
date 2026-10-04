@@ -1,44 +1,28 @@
 package br.edu.uern.prodcons.threads;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import br.edu.uern.prodcons.model.IBufferLimitado;
 import br.edu.uern.prodcons.model.Item;
 
 // Thread consumidora com cota finita de itens
 public class ThreadConsumidor implements Runnable {
 
-    private final int id;
     private final String nome;
-    private final IBufferLimitado buffer;
+    private final MotorSimulacao motor;
     private final int totalItens;
     private volatile int atrasoMs;
-    private final AtomicBoolean emExecucao = new AtomicBoolean(true);
-    private final AtomicBoolean pausado = new AtomicBoolean(false);
+    private final ControleExecucao controle;
     private int itensConsumidos = 0;
 
-    public ThreadConsumidor(int id, IBufferLimitado buffer, int totalItens, int atrasoMs) {
-        this.id = id;
+    public ThreadConsumidor(int id, MotorSimulacao motor, int totalItens, int atrasoMs, ControleExecucao controle) {
         this.nome = "Consumidor-" + id;
-        this.buffer = buffer;
+        this.motor = motor;
         this.totalItens = totalItens;
         this.atrasoMs = atrasoMs;
+        this.controle = controle;
     }
 
     public void setAtrasoMs(int novoAtraso) {
         this.atrasoMs = novoAtraso;
-    }
-
-    public void pausar() {
-        pausado.set(true);
-    }
-
-    public void retomar() {
-        pausado.set(false);
-    }
-
-    public void parar() {
-        emExecucao.set(false);
     }
 
     public int getItensConsumidos() {
@@ -56,20 +40,18 @@ public class ThreadConsumidor implements Runnable {
     @Override
     public void run() {
         try {
-            while (itensConsumidos < totalItens && emExecucao.get()) {
-                // espera enquanto tiver pausado
-                while (pausado.get() && emExecucao.get()) {
-                    Thread.sleep(100);
+            while (itensConsumidos < totalItens) {
+                // antes de entrar no monitor, ve se pode seguir (pausa / passo a passo)
+                if (!controle.aguardarLiberacao()) {
+                    break;
                 }
 
-                // retira o item do buffer (se tiver vazio, dorme no wait)
-                Item item = buffer.remover(this.nome);
+                // retira o item do buffer ativo do motor
+                Item item = motor.getBufferAtual().remover(this.nome);
                 itensConsumidos++;
 
-                // consome/processa o item fora da secao critica
-                if (item != null) {
-                    Thread.sleep((long) (atrasoMs * (0.8 + Math.random() * 0.4)));
-                }
+                // consome/processa fora da secao critica (dorme mesmo se nulo, mantendo a concorrencia real no modo caos)
+                Thread.sleep((long) (atrasoMs * (0.8 + Math.random() * 0.4)));
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

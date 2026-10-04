@@ -4,7 +4,7 @@ import br.edu.uern.prodcons.server.ServidorHttpEmbutido;
 import br.edu.uern.prodcons.telemetria.DespachanteEventos;
 import br.edu.uern.prodcons.threads.MotorSimulacao;
 
-// Ponto de entrada CLI e servidor do projeto Bounded Buffer com Monitores Nativos
+// Ponto de entrada CLI e servidor do projeto Bounded Buffer com monitores
 public class Principal {
 
     public static void main(String[] args) throws Exception {

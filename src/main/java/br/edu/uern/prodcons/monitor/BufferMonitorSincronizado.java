@@ -15,7 +15,8 @@ public class BufferMonitorSincronizado implements IBufferLimitado {
     private int in = 0;
     private int out = 0;
     private int count = 0;
-    private final int atrasoSecaoCriticaMs;
+    // volatile pq o slider da tela muda esse valor com as threads rodando
+    private volatile int atrasoSecaoCriticaMs;
     private final DespachanteEventos despachante;
 
     public BufferMonitorSincronizado(int capacidade, int atrasoSecaoCriticaMs, DespachanteEventos despachante) {
@@ -23,6 +24,11 @@ public class BufferMonitorSincronizado implements IBufferLimitado {
         this.buffer = new Item[capacidade];
         this.atrasoSecaoCriticaMs = atrasoSecaoCriticaMs;
         this.despachante = despachante;
+    }
+
+    // ajusta quanto tempo a thread segura o lock dentro da secao critica
+    public void setAtrasoSecaoCriticaMs(int atrasoSecaoCriticaMs) {
+        this.atrasoSecaoCriticaMs = Math.max(0, atrasoSecaoCriticaMs);
     }
 
     @Override
@@ -123,6 +129,21 @@ public class BufferMonitorSincronizado implements IBufferLimitado {
     public synchronized Item[] getSnapshot() {
         // copia do array pra nao vazar a referencia interna
         return Arrays.copyOf(buffer, buffer.length);
+    }
+
+    @Override
+    public synchronized void restaurarEstado(Item[] snapshot, int in, int out, int count) {
+        // migra ponteiros e ocupacao respeitando a capacidade
+        this.in = (capacidade > 0) ? (in % capacidade) : 0;
+        this.out = (capacidade > 0) ? (out % capacidade) : 0;
+        this.count = Math.min(capacidade, Math.max(0, count));
+        if (snapshot != null) {
+            for (int i = 0; i < capacidade && i < snapshot.length; i++) {
+                this.buffer[i] = snapshot[i];
+            }
+        }
+        // acorda possiveis threads que estavam esperando condicao
+        notifyAll();
     }
 
     @Override

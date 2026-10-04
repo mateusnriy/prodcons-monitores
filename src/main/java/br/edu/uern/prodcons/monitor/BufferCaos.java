@@ -118,6 +118,19 @@ public class BufferCaos implements IBufferLimitado {
     }
 
     @Override
+    public synchronized void restaurarEstado(Item[] snapshot, int in, int out, int count) {
+        // migra ponteiros e ocupacao mesmo que irregulares
+        this.in = (capacidade > 0) ? (in % capacidade) : 0;
+        this.out = (capacidade > 0) ? (out % capacidade) : 0;
+        this.count = count;
+        if (snapshot != null) {
+            for (int i = 0; i < capacidade && i < snapshot.length; i++) {
+                this.buffer[i] = snapshot[i];
+            }
+        }
+    }
+
+    @Override
     public boolean isChaos() {
         return true;
     }
