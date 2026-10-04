@@ -6,8 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import br.edu.uern.prodcons.model.Item;
 
-
-// Evento imutável de telemetria despachado a cada transição de estado da simulação.
+// Evento imutavel que guarda a foto do estado a cada mudanca
 public class EventoSimulacao {
 
     private static final DateTimeFormatter FORMATADOR_HORA = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
@@ -45,6 +44,7 @@ public class EventoSimulacao {
         this.message = message;
         this.isChaos = isChaos;
 
+        // extrai so os IDs dos itens pra montar o array do json
         this.slots = new Integer[capacity];
         if (snapshot != null) {
             for (int i = 0; i < capacity && i < snapshot.length; i++) {
@@ -53,62 +53,22 @@ public class EventoSimulacao {
         }
     }
 
-    public long getId() {
-        return id;
-    }
+    public long getId() { return id; }
+    public String getTimestamp() { return timestamp; }
+    public String getType() { return type; }
+    public String getThreadName() { return threadName; }
+    public String getThreadRole() { return threadRole; }
+    public int getSlotIndex() { return slotIndex; }
+    public Integer getItemId() { return itemId; }
+    public int getCount() { return count; }
+    public int getCapacity() { return capacity; }
+    public int getInIndex() { return inIndex; }
+    public int getOutIndex() { return outIndex; }
+    public Integer[] getSlots() { return slots; }
+    public String getMessage() { return message; }
+    public boolean isChaos() { return isChaos; }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    public String getThreadRole() {
-        return threadRole;
-    }
-
-    public int getSlotIndex() {
-        return slotIndex;
-    }
-
-    public Integer getItemId() {
-        return itemId;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public int getInIndex() {
-        return inIndex;
-    }
-
-    public int getOutIndex() {
-        return outIndex;
-    }
-
-    public Integer[] getSlots() {
-        return slots;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public boolean isChaos() {
-        return isChaos;
-    }
-
+    // monta o json na mao sem precisar de biblioteca externa
     public String toJson() {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
