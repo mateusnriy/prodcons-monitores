@@ -8,11 +8,14 @@
 * Guilherme Lacerda
 * José Junior
 
+
+**Vídeo de apresentação:** [Clique aqui](/arquivos/apresentacao.mp4)
+
 ---
 
 ## 1. Visão geral do projeto
 
-![Simulador](image.png)
+![Simulador](/arquivos/image.png)
 
 Este projeto implementa a solução clássica do problema da concorrência **Produtor-Consumidor (Buffer Limitado/Bounded Buffer)** utilizando **monitores**. 
 
@@ -92,7 +95,7 @@ Frontend localizado em `src/main/resources/public/`:
 
 ---
 
-## 4. Requisitos de Ambiente
+## 4. Requisitos de ambiente
 
 * **Java Development Kit (JDK):** Versão 21 LTS (ou superior).
 * **Apache Maven:** Versão 3.8+ (ou superior).
